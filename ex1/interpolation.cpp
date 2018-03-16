@@ -189,22 +189,6 @@ int main()
         std::cout << std::fixed << std::setprecision(2) << x << "\t"
                   << std::fixed << std::setprecision(20) << sp(x) << "\t" << f(x) << std:: endl;
     }
-    /* // test
-    samples = std::make_shared<samples_t>(4);
-    (*samples)[0] = std::make_pair(27.7, 4.1);
-    (*samples)[1] = std::make_pair(28, 4.3);
-    (*samples)[2] = std::make_pair(29, 4.1);
-    (*samples)[3] = std::make_pair(30, 3.0);
-    spline sp(samples, 3.0, -4.0);
-    for (double x = 27.7; x <= 30.0; x += 0.01)
-    {
-        std::cout << std::fixed << std::setprecision(2) << x << "\t"
-                  << std::fixed << std::setprecision(20) << sp(x) << std:: endl;
-    }
 
-    std::vector<double> a {0, 3.0/13, 0.5, 1}, b {2, 2, 2, 2}, c {1, 10.0/13, 0.5, 2}, ff { -46.6666, -4.00002, -2.7, -17.4 };
-    std::vector<double> x = solve_equ(a, b, c, ff);
-    std::cout << x[0] << "\t" << x[1] << "\t" << x[2] << "\t" << x[3] << std:: endl;
-    */
     return 0;
 }
