@@ -45,7 +45,7 @@ public:
 
     poly operator*(const poly &b) const
     {
-        poly result(this->n() * b.n() + 1);
+        poly result(this->n() + b.n() + 1);
         for (int i = 0; i <= this->n(); ++i)
         {
             for (int j = 0; j <= b.n(); ++j)
@@ -88,14 +88,25 @@ public:
         return result;
     }
 
-    double length2(const std::vector<double> &x) const
+private:
+    double _length2_cache = 0.0;
+    const std::vector<double> *_last_x = nullptr;
+public:
+    double length2(const std::vector<double> &x)
     {
+        if (&x == _last_x)
+        {
+            std::cout << "hit!";
+            return _length2_cache;
+        }
         double result = 0;
         for (std::size_t i = 0; i < x.size(); ++i)
         {
             double y = (*this)(x[i]);
             result += y * y;
         }
+        _length2_cache = result;
+        _last_x = &x;
         return result;
     }
 
@@ -187,14 +198,38 @@ public:
 
 int main()
 {
+    const int n = 3;
     std::vector<double> x { -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0 },
                         y { -4.467, -0.452, 0.551, 0.048, -0.447, 0.549, 4.552 };
-    /*poly p1({-1, 1}), p2({1, 1});
-    p1.print(); std::cout << std::endl;
-    //p2 = p1;
-    p2 = p1 * p2;
-    p2.print(); std::cout << std::endl;
-    (poly({-1,0}) * (p1 + p2)).print(); std::cout << std::endl;
-    std::cout << p2(3.3) << " " << p2(2) << std::endl;*/
+
+    // 计算正交基
+    double alpha, beta;
+    poly p[n + 1];
+    std::cout << "n = " << n << std::endl;
+    p[0] = poly(std::vector<double> { 1.0 });
+    alpha = p[0].xdot(x) / x.size();
+    p[1] = poly({ -alpha, 1.0 });
+    for (int i = 2; i <= n; ++i)
+    {
+        alpha = p[i - 1].xdot(x) / p[i - 1].length2(x);
+        beta = p[i - 1].length2(x) / p[i - 2].length2(x);
+        p[i] = poly({ -alpha, 1.0 }) * p[i - 1] + poly(std::vector<double> { -beta }) * p[i - 2];
+    }
+
+    std::cout << "Bases:" << std::endl;
+    for (int i = 0; i <= n; ++i)
+    {
+        p[i].print();
+        std::cout << std::endl;
+    }
+
+    for (int i = 0; i <= n; ++i)
+    {
+        for (int j = 0; j <= n; ++j)
+        {
+            std::cout << p[i].dot(p[j], x) << "\t";
+        }
+        std::cout << std::endl;
+    }
     return 0;
 }
