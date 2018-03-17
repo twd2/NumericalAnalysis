@@ -40,7 +40,10 @@ public:
 
     void normalize()
     {
-
+        while (_coeff.size() >= 2 && _coeff.back() == 0.0)
+        {
+            _coeff.pop_back();
+        }
     }
 
     poly operator*(const poly &b) const
@@ -96,7 +99,6 @@ public:
     {
         if (&x == _last_x)
         {
-            std::cout << "hit!";
             return _length2_cache;
         }
         double result = 0;
@@ -198,6 +200,7 @@ public:
 
 int main()
 {
+    std::cout << std::fixed << std::setprecision(20);
     const int n = 3;
     std::vector<double> x { -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0 },
                         y { -4.467, -0.452, 0.551, 0.048, -0.447, 0.549, 4.552 };
@@ -205,7 +208,6 @@ int main()
     // 计算正交基
     double alpha, beta;
     poly p[n + 1];
-    std::cout << "n = " << n << std::endl;
     p[0] = poly(std::vector<double> { 1.0 });
     alpha = p[0].xdot(x) / x.size();
     p[1] = poly({ -alpha, 1.0 });
@@ -222,12 +224,20 @@ int main()
         p[i].print();
         std::cout << std::endl;
     }
+    std::cout << std::endl;
 
+    poly fit;
     for (int i = 0; i <= n; ++i)
     {
-        for (int j = 0; j <= n; ++j)
+        std::cout << "n = " << i << std::endl;
+        double coeff = p[i].dot(y, x) / p[i].length2(x);
+        fit = fit + poly(std::vector<double> { coeff }) * p[i];
+        std::cout << "pn = "; fit.print(); std::cout << std::endl;
+        std::cout << "x\ty\tpn(x)\tdiff" << std::endl;
+        for (std::size_t j = 0; j < x.size(); ++j)
         {
-            std::cout << p[i].dot(p[j], x) << "\t";
+            std::cout << x[j] << "\t" << y[j] << "\t"
+                      << fit(x[j]) << "\t" << fit(x[j]) - y[j] << std::endl;
         }
         std::cout << std::endl;
     }
