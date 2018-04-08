@@ -2,6 +2,8 @@
 #include <iostream>
 #include <iomanip>
 #include <functional>
+#include <vector>
+#include <map>
 
 // 梯形公式
 double T(std::function<double (double)> &f, double a, double b, double n)
@@ -39,14 +41,55 @@ double S(std::function<double (double)> &f, double a, double b, double n)
 }
 
 // 龙贝格算法
-double L(std::function<double (double)> &f, double a, double b, double n)
+double L(std::function<double (double)> &f, double a, double b, double eps)
 {
-    // TODO
-    return 0.0;
+    std::cout << std::fixed << std::setprecision(8);
+    std::vector<double> T0;
+    std::map<int, double [2]> Tm;
+    T0.push_back((f(a) + f(b)) * (b - a) * 0.5);
+    std::cout << "0 " << T0.back() << std::endl;
+    int n = 1, k = 0;
+    double h = b - a;
+    while (true)
+    {
+        // 递推公式计算 T_0^{(k)}
+        double diff = 0.0, x = a + 0.5 * h;
+        for (int i = 0; i < n; ++i)
+        {
+            diff += f(x);
+            x += h;
+        }
+        T0.push_back(T0.back() * 0.5 + diff * h * 0.5);
+        k += 1;
+        n *= 2;
+        h /= 2.0;
+        std::cout << k << " " << T0.back() << " ";
+
+        // 计算 T_m^{(k)}
+        Tm[1][0] = Tm[1][1];
+        Tm[1][1] = (4 * T0[T0.size() - 1] - T0[T0.size() - 2]) / 3;
+        std::cout << Tm[1][1] << " ";
+        double coeff = 16.0;
+        for (int m = 2; m <= k; ++m)
+        {
+            Tm[m][0] = Tm[m][1];
+            Tm[m][1] = (coeff * Tm[m - 1][1] - Tm[m - 1][0]) / (coeff - 1.0);
+            std::cout << Tm[m][1] << " ";
+            coeff *= 4.0;
+        }
+        std::cout << std::endl;
+        if (std::abs(Tm[k][1] - Tm[k - 1][1]) < eps)
+        {
+            break;
+        }
+    }
+    std::cout << std::fixed << std::setprecision(20);
+    return Tm[k][1];
 }
 
 int main()
 {
+    const double eps = 1e-6;
     std::cout << std::fixed << std::setprecision(20);
     std::function<double (double)> f = [](double x) { return exp(x); };
     double acc_result = exp(1) - 1;
@@ -55,34 +98,7 @@ int main()
     std::cout << "  T   = " << t_result << ", diff = " << t_result - acc_result << std::endl;
     double s_result = S(f, 0.0, 1.0, 8);
     std::cout << "  S   = " << s_result << ", diff = " << s_result - acc_result << std::endl;
-    double l_result = L(f, 0.0, 1.0, 5);
+    double l_result = L(f, 0.0, 1.0, eps);
     std::cout << "  L   = " << l_result << ", diff = " << l_result - acc_result << std::endl;
-
-    int n = 1;
-    double eps = 1e-6;
-    double result;
-    do
-    {
-        result = T(f, 0.0, 1.0, n);
-        std::cout << "n = " << n << ", " << "T = " << result << ", diff = " << result - acc_result << std::endl;
-        ++n;
-    }
-    while (fabs(result - acc_result) >= eps);
-    n = 1;
-    do
-    {
-        result = S(f, 0.0, 1.0, n);
-        std::cout << "n = " << n << ", " << "S = " << result << ", diff = " << result - acc_result << std::endl;
-        ++n;
-    }
-    while (fabs(result - acc_result) >= eps);
-    /*n = 1;
-    do
-    {
-        result = L(f, 0.0, 1.0, n);
-        std::cout << "n = " << n << ", " << "L = " << result << ", diff = " << result - acc_result << std::endl;
-        ++n;
-    }
-    while (fabs(result - acc_result) >= eps);*/
     return 0;
 }
