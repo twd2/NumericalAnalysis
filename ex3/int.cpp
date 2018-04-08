@@ -44,14 +44,14 @@ double S(std::function<double (double)> &f, double a, double b, double n)
 double L(std::function<double (double)> &f, double a, double b, double eps)
 {
     std::cout << std::fixed << std::setprecision(8);
-    std::vector<double> T0;
     std::map<int, double [2]> Tm;
-    T0.push_back((f(a) + f(b)) * (b - a) * 0.5);
-    std::cout << "0 " << T0.back() << std::endl;
-    int n = 1, k = 0;
+    Tm[0][1] = (f(a) + f(b)) * (b - a) * 0.5;
+    std::cout << "0 " << Tm[0][1] << std::endl;
+    int k = 0, n = 1;
     double h = b - a;
     while (true)
     {
+        Tm[0][0] = Tm[0][1];
         // 递推公式计算 T_0^{(k)}
         double diff = 0.0, x = a + 0.5 * h;
         for (int i = 0; i < n; ++i)
@@ -59,18 +59,15 @@ double L(std::function<double (double)> &f, double a, double b, double eps)
             diff += f(x);
             x += h;
         }
-        T0.push_back(T0.back() * 0.5 + diff * h * 0.5);
-        k += 1;
+        Tm[0][1] = Tm[0][0] * 0.5 + diff * h * 0.5;
+        ++k;
         n *= 2;
         h /= 2.0;
-        std::cout << k << " " << T0.back() << " ";
+        std::cout << k << " " << Tm[0][1] << " ";
 
         // 计算 T_m^{(k)}
-        Tm[1][0] = Tm[1][1];
-        Tm[1][1] = (4 * T0[T0.size() - 1] - T0[T0.size() - 2]) / 3;
-        std::cout << Tm[1][1] << " ";
-        double coeff = 16.0;
-        for (int m = 2; m <= k; ++m)
+        double coeff = 4.0;
+        for (int m = 1; m <= k; ++m)
         {
             Tm[m][0] = Tm[m][1];
             Tm[m][1] = (coeff * Tm[m - 1][1] - Tm[m - 1][0]) / (coeff - 1.0);
