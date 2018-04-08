@@ -28,16 +28,5 @@ int main()
     double g_result;
     g_result = G(f, 0.0, 1.0, 10);
     std::cout << "G = " << g_result << ", diff = " << g_result - acc_result << std::endl;
-
-    int n = 1;
-    double eps = 1e-6;
-    double result;
-    do
-    {
-        result = G(f, 0.0, 1.0, n);
-        std::cout << "n = " << n << ", " << "G = " << result << ", diff = " << result - acc_result << std::endl;
-        ++n;
-    }
-    while (fabs(result - acc_result) >= eps);
     return 0;
 }

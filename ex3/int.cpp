@@ -43,7 +43,7 @@ double S(std::function<double (double)> &f, double a, double b, double n)
 // 龙贝格算法
 double L(std::function<double (double)> &f, double a, double b, double eps)
 {
-    std::cout << std::fixed << std::setprecision(8);
+    std::cout << std::fixed << std::setprecision(20);
     std::map<int, double [2]> Tm;
     Tm[0][1] = (f(a) + f(b)) * (b - a) * 0.5;
     std::cout << "0 " << Tm[0][1] << std::endl;
@@ -91,9 +91,9 @@ int main()
     std::function<double (double)> f = [](double x) { return exp(x); };
     double acc_result = exp(1) - 1;
     std::cout << "e - 1 = " << acc_result << std::endl;
-    double t_result = T(f, 0.0, 1.0, 1000);
+    double t_result = T(f, 0.0, 1.0, 476);
     std::cout << "  T   = " << t_result << ", diff = " << t_result - acc_result << std::endl;
-    double s_result = S(f, 0.0, 1.0, 8);
+    double s_result = S(f, 0.0, 1.0, 6);
     std::cout << "  S   = " << s_result << ", diff = " << s_result - acc_result << std::endl;
     double l_result = L(f, 0.0, 1.0, eps);
     std::cout << "  L   = " << l_result << ", diff = " << l_result - acc_result << std::endl;
