@@ -26,7 +26,7 @@ int main()
     std::cout << "pi = " << acc_result << std::endl;
 
     double g_result;
-    g_result = G(f, 0.0, 1.0, 10);
+    g_result = G(f, 0.0, 1.0, 13);
     std::cout << "G = " << g_result << ", diff = " << g_result - acc_result << std::endl;
     return 0;
 }
