@@ -233,12 +233,17 @@ int main()
         double coeff = p[i].dot(y, x) / p[i].length2(x);
         fit = fit + poly(std::vector<double> { coeff }) * p[i];
         std::cout << "pn = "; fit.print(); std::cout << std::endl;
+        double diff2_sum = 0.0;
         std::cout << "x\ty\tpn(x)\tdiff" << std::endl;
         for (std::size_t j = 0; j < x.size(); ++j)
         {
+            double diff2 = fit(x[j]) - y[j];
+            diff2 *= diff2;
+            diff2_sum += diff2;
             std::cout << x[j] << "\t" << y[j] << "\t"
                       << fit(x[j]) << "\t" << fit(x[j]) - y[j] << std::endl;
         }
+        std::cout << "diff2 = " << diff2_sum << std::endl;
         std::cout << std::endl;
     }
     return 0;
