@@ -205,8 +205,9 @@ public:
         }
     }
 
-    matrix sqrt() const
+    void sqrt(matrix &l, matrix &d) const
     {
+        // 改进的平方根算法
         if (_row != _col)
         {
             exit(1);
@@ -214,31 +215,33 @@ public:
 
         const int n = _row;
         const matrix &a = *this;
-        matrix l = zeros(n);
+        l = ident(n);
+        d = zeros(n);
 
-        for (int j = 0; j < n; ++j)
+        matrix t = zeros(n);
+        d(0, 0) = a(0, 0);
+        for (int i = 1; i < n; ++i)
         {
-            long double sum = 0.0;
-            for (int k = 0; k < j; ++k)
+            for (int j = 0; j < i; ++j)
             {
-                sum += l(j, k) * l(j, k);
-            }
-            l(j, j) = a(j, j) - sum; // FIXME! std::sqrt(a(j, j) - sum);
-
-            for (int i = j + 1; i < n; ++i)
-            {
-                sum = 0.0;
+                long double sum = 0.0;
                 for (int k = 0; k < j; ++k)
                 {
-                    sum += l(i, k) * l(j, k);
+                    sum += t(i, k) * l(j, k);
                 }
-                l(i, j) = (a(i, j) - sum) / l(j, j);
+                t(i, j) = a(i, j) - sum;
+                l(i, j) = t(i, j) / d(j, j);
             }
+            long double sum = 0.0;
+            for (int k = 0; k < i; ++k)
+            {
+                sum += t(i, k) * l(i, k);
+            }
+            d(i, i) = a(i, i) - sum;
         }
-        return l;
     }
 
-    matrix solve_as_l(const matrix &b)
+    matrix solve_as_l(const matrix &b) const
     {
         if (_row != _col)
         {
@@ -266,12 +269,12 @@ public:
             {
                 sum += l(i, k) * y._v[k];
             }
-            y._v[i] = (b._v[i] - sum) / l(i, i);
+            y._v[i] = b._v[i] - sum;
         }
         return y;
     }
 
-    matrix solve_as_u(const matrix &y)
+    matrix solve_as_u(const matrix &y) const
     {
         if (_row != _col)
         {
@@ -304,7 +307,7 @@ public:
         return x;
     }
 
-    matrix solve_as_lt(const matrix &y)
+    matrix solve_as_lt_with_d(const matrix &y, const matrix &d) const
     {
         if (_row != _col)
         {
@@ -324,7 +327,7 @@ public:
         const int n = _row;
         const matrix &l = *this;
         matrix x(n, 1);
-        x._v[n - 1] = y._v[n - 1] / l(n - 1, n - 1);
+        x._v[n - 1] = y._v[n - 1] / d(n - 1, n - 1);
         for (int i = n - 2; i >= 0; --i)
         {
             long double sum = 0.0;
@@ -332,7 +335,7 @@ public:
             {
                 sum += l(k, i) * x._v[k];
             }
-            x._v[i] = (y._v[i] - sum) / l(i, i);
+            x._v[i] = y._v[i] / d(i, i) - sum;
         }
         return x;
     }
@@ -506,10 +509,12 @@ void sqrt_test(const int n)
     matrix h = matrix::hilbert(n);
     std::cout << std::fixed << std::setprecision(6);
     // Cholesky分解
-    matrix l = h.sqrt();
+    matrix l, d;
+    h.sqrt(l, d);
     std::cout << "L = " << std::endl; l.print(); std::cout << std::endl;
+    std::cout << "D = " << std::endl; d.print(); std::cout << std::endl;
     // 验证
-    std::cout << "L * LT = " << std::endl; (l * l.transpose()).print(); std::cout << std::endl;
+    std::cout << "L * D * LT = " << std::endl; (l * d * l.transpose()).print(); std::cout << std::endl;
     matrix x(n, 1); // 构造精确解
     for (int i = 0; i < n; ++i)
     {
@@ -519,8 +524,8 @@ void sqrt_test(const int n)
     std::cout << "x = " << std::endl; x.print(); std::cout << std::endl;
     matrix b = h * x;
     std::cout << "b = H" << n << " * x = " << std::endl; b.print(); std::cout << std::endl;
-    // 用LU分解结果计算近似解\hat x
-    matrix x_hat = l.solve_as_lt(l.solve_as_l(b));
+    // 用Cholesky分解结果计算近似解\hat x
+    matrix x_hat = l.solve_as_lt_with_d(l.solve_as_l(b), d);
     std::cout << "x_hat = " << std::endl; x_hat.print(); std::cout << std::endl;
     matrix r = b - h * x_hat, delta = x_hat - x;
     std::cout << std::scientific << std::setprecision(10);
@@ -560,14 +565,16 @@ void benchmark(const int n, const int iter = 10000)
     start_time = steady_clock::now();
     for (int i = 0; i < iter; ++i)
     {
-        matrix l = h.sqrt();
-        matrix x_hat = l.solve_as_lt(l.solve_as_l(b));
+        matrix l, d;
+        h.sqrt(l, d);
+        matrix x_hat = l.solve_as_lt_with_d(l.solve_as_l(b), d);
     }
     end_time = steady_clock::now();
     sqrt_time = duration_cast<duration<double> >(end_time - start_time).count() - bias;
     sqrt_time /= iter;
 
     std::cout << "n = " << n << std::endl;
+    std::cout << "iter = " << iter << std::endl;
     std::cout << std::fixed << std::setprecision(2);
     std::cout << "LU time = " << lu_time * 1e9 << " ns" << std::endl;
     std::cout << "Cholesky time = " << sqrt_time * 1e9 << " ns" << std::endl;
@@ -599,7 +606,7 @@ int main()
     cond_test();
     lu_test(10);
     sqrt_test(10);
-    benchmark(100, 1000);
+    benchmark(100, 10000);
     std::cout << "========== n ==========" << std::endl;
     for (int n = 1; n <= 100; ++n)
     {
